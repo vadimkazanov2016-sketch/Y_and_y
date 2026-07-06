@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI PM Dashboard — KPI Cascade Innovative</title>
+  <style>
+    :root{
+      --bg0:#07111f;--bg1:#0b1728;--bg2:#111c31;
+      --card:rgba(15, 25, 42, .86);--card2:rgba(20, 33, 54, .92);
+      --text:#eef5ff;--muted:#93a4bc;--muted2:#c6d3e5;--line:rgba(148,163,184,.22);
+      --blue:#4f8cff;--blue2:#72b7ff;--green:#19d29b;--yellow:#ffb84d;--red:#ff6378;--violet:#9d72ff;
+      --shadow:0 24px 70px rgba(0,0,0,.34);--radius:24px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 9% 9%, rgba(79,140,255,.28), transparent 31%),
+        radial-gradient(circle at 82% 10%, rgba(157,114,255,.23), transparent 29%),
+        radial-gradient(circle at 92% 72%, rgba(25,210,155,.17), transparent 34%),
+        radial-gradient(circle at 38% 102%, rgba(114,183,255,.12), transparent 34%),
+        linear-gradient(135deg,#050b16 0%, #0c1628 42%, #08111e 100%);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+    body:before{
+      content:"";position:fixed;inset:0;pointer-events:none;opacity:.28;
+      background-image:
+        linear-gradient(rgba(114,183,255,.12) 1px, transparent 1px),
+        linear-gradient(90deg,rgba(114,183,255,.12) 1px, transparent 1px),
+        radial-gradient(circle, rgba(25,210,155,.34) 1px, transparent 1.8px);
+      background-size:44px 44px,44px 44px,28px 28px;
+      mask-image:radial-gradient(circle at 50% 14%, black, transparent 78%);
+    }
+    body:after{
+      content:"";position:fixed;inset:-120px;pointer-events:none;opacity:.42;
+      background:
+        conic-gradient(from 210deg at 72% 26%, rgba(79,140,255,.24), transparent 18%, rgba(25,210,155,.14), transparent 48%, rgba(157,114,255,.18), transparent 72%),
+        linear-gradient(115deg, transparent 0 16%, rgba(114,183,255,.12) 16% 16.2%, transparent 16.2% 42%, rgba(25,210,155,.10) 42% 42.16%, transparent 42.16% 100%),
+        linear-gradient(28deg, transparent 0 58%, rgba(157,114,255,.10) 58% 58.18%, transparent 58.18% 100%);
+      filter: blur(.2px);
+      mix-blend-mode:screen;
+    }
+    .page{max-width:1500px;width:100%;margin:0 auto;padding:34px 42px 48px;position:relative;z-index:1}
+    .header{display:flex;justify-content:space-between;gap:22px;align-items:flex-start;margin-bottom:22px}
+    h1{font-size:35px;line-height:1.08;margin:0;letter-spacing:-.045em}
+    .subtitle{color:var(--muted2);margin:9px 0 0;font-size:16px}
+    .badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .badge{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:800;color:#dbeafe;box-shadow:0 8px 22px rgba(0,0,0,.12)}
+    .panel,.section{
+      background:linear-gradient(135deg,rgba(15,25,42,.94),rgba(11,23,40,.84));
+      border:1px solid rgba(148,163,184,.22);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(14px);
+    }
+    .panel{padding:18px;min-width:405px}
+    .panel h3{font-size:15px;margin:0 0 12px;color:#dbeafe}
+    .buttons{display:flex;gap:8px;flex-wrap:wrap}
+    button{
+      border:1px solid rgba(148,163,184,.22);border-radius:13px;
+      background:rgba(79,140,255,.14);color:#dbeafe;font-weight:900;padding:10px 13px;cursor:pointer;transition:.15s
+    }
+    button:hover,button.active{background:linear-gradient(135deg,#356dff,#6f56ff);color:white;transform:translateY(-1px);border-color:rgba(255,255,255,.22)}
+    .section{padding:22px;margin-bottom:22px}
+    .section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px;gap:15px}
+    .section-title h2{font-size:21px;margin:0;letter-spacing:-.03em}
+    .section-title span{font-size:13px;color:var(--muted);font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr;gap:22px;align-items:start}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+    .kpi{
+      background:rgba(255,255,255,.055);
+      border:1px solid var(--line);
+      border-radius:18px;padding:16px;min-height:112px;
+    }
+    .kpi .label{color:var(--muted);font-size:13px;line-height:1.35;margin-bottom:8px}
+    .kpi .value{font-size:29px;font-weight:950;letter-spacing:-.04em}
+    .kpi .delta{font-size:12px;color:#79f2c9;font-weight:850;margin-top:8px}
+    .kpi.blue{background:linear-gradient(135deg,rgba(79,140,255,.22),rgba(255,255,255,.04))}
+    .kpi.green{background:linear-gradient(135deg,rgba(25,210,155,.20),rgba(255,255,255,.04))}
+    .kpi.yellow{background:linear-gradient(135deg,rgba(255,184,77,.20),rgba(255,255,255,.04))}
+    .kpi.red{background:linear-gradient(135deg,rgba(255,99,120,.18),rgba(255,255,255,.04))}
+    .dashboard-visuals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:15px}
+    .visual-card{
+      background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:20px;padding:16px;min-height:218px;min-width:0;
+    }
+    .visual-card h3{margin:0 0 12px;font-size:15px;color:#e5eefb}
+    .donut-wrap{display:flex;gap:15px;align-items:center;min-width:0}
+    .donut{
+      width:128px;height:128px;border-radius:50%;
+      background:conic-gradient(var(--green) 0 68%, rgba(148,163,184,.22) 68% 100%);
+      position:relative;box-shadow:inset 0 0 30px rgba(25,210,155,.10);
+    }
+    .donut:after{content:"";position:absolute;inset:20px;border-radius:50%;background:#101b2e;border:1px solid rgba(148,163,184,.18)}
+    .donut span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:950;font-size:25px;z-index:1}
+    .legend{display:grid;gap:8px;font-size:12px;color:var(--muted2);min-width:0}
+    .legend-row{display:flex;align-items:center;gap:8px}.legend-dot{width:9px;height:9px;border-radius:50%;background:var(--green)}
+    .bars{display:grid;gap:11px;margin-top:10px}
+    .barline{display:grid;grid-template-columns:96px 1fr 34px;gap:9px;align-items:center;font-size:12px;color:var(--muted2)}
+    .track{height:10px;background:rgba(148,163,184,.18);border-radius:999px;overflow:hidden}
+    .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--blue2))}
+    .spark{height:112px;position:relative;margin-top:16px;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .spark svg{position:absolute;inset:0;width:100%;height:100%}
+    .spark-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:7px}
+    .agents{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .agent{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.045);padding:12px;min-height:86px}
+    .agent strong{display:block;font-size:13px;margin-bottom:6px;color:#eef5ff}.agent p{margin:0;font-size:12px;line-height:1.35;color:var(--muted)}
+    .gantt-wrap{display:grid;grid-template-columns:minmax(760px,1.35fr) minmax(300px,.65fr);gap:18px;align-items:stretch}
+    .weeks{
+      display:grid;
+      grid-template-columns:minmax(220px,240px) repeat(8,minmax(48px,1fr));
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      background:rgba(255,255,255,.035);
+      width:100%;
+      min-width:0;
+    }
+    .cell{border-bottom:1px solid var(--line);min-height:50px;display:flex;align-items:center;padding:10px 12px;font-size:13px}
+    .head{background:rgba(255,255,255,.055);color:#b8c6da;font-weight:950;justify-content:center;min-height:42px}
+    .head:first-child{justify-content:flex-start}
+    .row-title{font-weight:900;cursor:pointer;color:#e8f0ff}.row-title:hover{color:#90c2ff}
+    .timeline{
+      position:relative;border-bottom:1px solid var(--line);min-height:50px;grid-column:span 8;
+      background:
+        linear-gradient(to right,rgba(148,163,184,.18) 1px,transparent 1px);
+      background-size:12.5% 100%;
+    }
+    .gantt-row:last-child .cell,.gantt-row:last-child .timeline{border-bottom:0}
+    .gbar{position:absolute;top:14px;height:22px;border-radius:999px;cursor:pointer;box-shadow:0 10px 20px rgba(37,99,235,.20);transition:.15s}
+    .gbar:hover,.gbar.selected{transform:translateY(-2px);filter:saturate(1.18);box-shadow:0 15px 26px rgba(79,140,255,.28)}
+    .b1{background:linear-gradient(90deg,#10b981,#34d399)}.b2{background:linear-gradient(90deg,#7c3aed,#8b5cf6)}.b3{background:linear-gradient(90deg,#2563eb,#60a5fa)}.b4{background:linear-gradient(90deg,#f59e0b,#fbbf24)}.b5{background:linear-gradient(90deg,#ef4444,#fb7185)}
+    .detail,.company-card{
+      background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:18px;padding:16px;
+    }
+    .detail h3,.company-card h3{margin:0 0 9px;font-size:18px;letter-spacing:-.02em}
+    .detail .meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .pill{font-size:12px;font-weight:950;padding:7px 9px;border-radius:999px;background:rgba(79,140,255,.16);color:#dbeafe;border:1px solid rgba(79,140,255,.18);white-space:normal;max-width:100%}
+    .detail p,.detail li{font-size:13px;line-height:1.45;color:#cbd7e9}.detail ul{margin:8px 0 0;padding-left:18px}
+    .filters{display:flex;gap:8px;flex-wrap:wrap}
+    .table-grid{display:grid;grid-template-columns:1fr 300px;gap:18px}
+    table{width:100%;border-collapse:collapse;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:rgba(255,255,255,.035)}
+    th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:middle}
+    th{background:rgba(255,255,255,.055);color:#b8c6da;font-weight:950}tr:last-child td{border-bottom:0}
+    tr.company{cursor:pointer;transition:.12s}tr.company:hover,tr.company.selected{background:rgba(79,140,255,.10)}
+    .progress-wrap{height:9px;border-radius:999px;background:rgba(148,163,184,.20);overflow:hidden;width:110px}.progress{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--blue2))}
+    .status{display:inline-block;border-radius:999px;padding:7px 9px;font-size:12px;font-weight:950;white-space:nowrap}
+    .ok{background:rgba(25,210,155,.15);color:#7df2c9}.check{background:rgba(79,140,255,.16);color:#b9d5ff}.risk{background:rgba(255,184,77,.16);color:#ffd48a}.block{background:rgba(255,99,120,.16);color:#ffadb8}
+    .metric-line{display:flex;justify-content:space-between;border-bottom:1px solid rgba(148,163,184,.14);padding:8px 0;font-size:13px;color:#cbd7e9}.metric-line:last-child{border-bottom:0}
+    .report{background:linear-gradient(135deg,rgba(255,255,255,.065),rgba(255,255,255,.035));border:1px solid var(--line);border-radius:20px;padding:20px}
+    .report h3{margin:0 0 10px;font-size:18px}.report-meta{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+    .report-block{border-left:4px solid var(--blue2);padding-left:14px;margin:15px 0}.report-block strong{font-size:14px;display:block;margin-bottom:6px;color:#edf5ff}
+    .report-block p{margin:0;color:#cbd7e9;font-size:13px;line-height:1.52}
+    .ai-note{background:rgba(255,255,255,.045);border:1px dashed rgba(148,163,184,.35);border-radius:16px;padding:14px;font-size:13px;color:#cbd7e9;line-height:1.48}
+    .footer-note{text-align:right;color:#8293aa;font-size:12px}
+    @media(max-width:1200px){.page{width:100%}.grid,.gantt-wrap,.table-grid,.dashboard-visuals{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.agents{grid-template-columns:repeat(2,1fr)}.header{flex-direction:column}.panel{min-width:auto}.weeks{width:100%;grid-template-columns:minmax(185px,210px) repeat(8,1fr)}.timeline{background-size:12.5% 100%}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <header class="header">
+    <div>
+      <h1>AI-assisted PM Dashboard<br>для процесса «Каскад»</h1>
+      <p class="subtitle">Интерактивный прототип мониторинга внедрения AI-агентов в процесс подготовки карт ключевых показателей</p>
+      <div class="badges">
+        <span class="badge">AI-агенты в контуре проверки</span>
+        <span class="badge">План-факт и дорожная карта</span>
+        <span class="badge">Отчётность для стейкхолдеров</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Сценарий расчёта</h3>
+      <div class="buttons">
+        <button class="active" onclick="setScenario('base',this)">Базовый</button>
+        <button onclick="setScenario('fast',this)">Ускоренный</button>
+        
+      </div>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Дашборд прогресса</h2><span>интерактивно: переключи сценарий внедрения</span>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi blue"><div class="label">Подключено дочерних предприятий</div><div class="value" id="kpiCompanies">6 / 10</div><div class="delta" id="dCompanies">пилотный контур</div></div>
+      <div class="kpi green"><div class="label">Карт КП обработано</div><div class="value" id="kpiCards">68%</div><div class="delta" id="dCards">AI-assisted процесс</div></div>
+      <div class="kpi yellow"><div class="label">На согласовании</div><div class="value" id="kpiReview">18</div><div class="delta" id="dReview">требуют проверки</div></div>
+      <div class="kpi red"><div class="label">Ошибок найдено AI-агентом</div><div class="value" id="kpiErrors">27</div><div class="delta" id="dErrors">до отправки в офис</div></div>
+    </div>
+
+    <div class="dashboard-visuals">
+      <div class="visual-card">
+        <h3>Готовность пилотного контура</h3>
+        <div class="donut-wrap">
+          <div class="donut" id="donut"><span id="donutValue">68%</span></div>
+          <div class="legend">
+            <div class="legend-row"><span class="legend-dot"></span> Обработано с AI-проверкой</div>
+            <div class="legend-row"><span class="legend-dot" style="background:rgba(148,163,184,.4)"></span> Требует ручной проверки</div>
+            <div class="legend-row"><span class="legend-dot" style="background:var(--yellow)"></span> Приоритет: согласование</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="visual-card">
+        <h3>Статусы дочерних предприятий</h3>
+        <div class="bars">
+          <div class="barline"><span>Принято</span><div class="track"><div class="fill" id="barOk" style="width:30%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div><strong id="barOkText">3</strong></div>
+          <div class="barline"><span>Проверка</span><div class="track"><div class="fill" id="barCheck" style="width:40%"></div></div><strong id="barCheckText">4</strong></div>
+          <div class="barline"><span>Риск</span><div class="track"><div class="fill" id="barRisk" style="width:20%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div><strong id="barRiskText">2</strong></div>
+          <div class="barline"><span>Блокер</span><div class="track"><div class="fill" id="barBlock" style="width:10%;background:linear-gradient(90deg,#ef4444,#fb7185)"></div></div><strong id="barBlockText">1</strong></div>
+        </div>
+      </div>
+
+      <div class="visual-card">
+        <h3>Прогноз снижения ручной нагрузки</h3>
+        <div class="spark">
+          <svg viewBox="0 0 300 112" preserveAspectRatio="none">
+            <polyline id="sparkLine" points="0,92 50,82 100,70 150,55 200,43 250,32 300,23" fill="none" stroke="#72b7ff" stroke-width="4" stroke-linecap="round"/>
+            <polyline id="sparkArea" points="0,112 0,92 50,82 100,70 150,55 200,43 250,32 300,23 300,112" fill="rgba(79,140,255,.18)" stroke="none"/>
+          </svg>
+        </div>
+        <div class="spark-labels"><span>Нед. 1</span><span>Нед. 4</span><span>Нед. 8</span></div>
+      </div>
+    </div>
+
+    <div class="agents">
+      <div class="agent"><strong>Data Validation Agent</strong><p>Проверка пропусков, формул, единиц измерения и выбросов.</p></div>
+      <div class="agent"><strong>Deviation Agent</strong><p>Анализ план-факт отклонений и приоритетов по КП.</p></div>
+      <div class="agent"><strong>Comment Agent</strong><p>Черновики причин отклонений для ответственных.</p></div>
+      <div class="agent"><strong>Roadmap Agent</strong><p>Контроль сроков, зависимостей и влияния задержек.</p></div>
+      <div class="agent"><strong>Reporting Agent</strong><p>Сборка дипломатичного отчёта для стейкхолдеров.</p></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <div>
+      <section class="section">
+        <div class="section-title">
+          <h2>Диаграмма Ганта внедрения</h2><span>кликни на этап, чтобы посмотреть детали</span>
+        </div>
+        <div class="gantt-wrap">
+          <div class="weeks">
+            <div class="cell head">Этап внедрения</div>
+            <div class="cell head">1</div><div class="cell head">2</div><div class="cell head">3</div><div class="cell head">4</div>
+            <div class="cell head">5</div><div class="cell head">6</div><div class="cell head">7</div><div class="cell head">8</div>
+
+            <div class="cell row-title" onclick="selectPhase(0)">1. Подготовка шаблона КП</div>
+            <div class="timeline"><span class="gbar b1 selected" data-phase="0" onclick="selectPhase(0)" style="left:0%;width:12.5%"></span></div>
+
+            <div class="cell row-title" onclick="selectPhase(1)">2. Настройка AI-агентов</div>
+            <div class="timeline"><span class="gbar b2" data-phase="1" onclick="selectPhase(1)" style="left:12.5%;width:25%"></span></div>
+
+            <div class="cell row-title" onclick="selectPhase(2)">3. Пилот на 1 предприятии</div>
+            <div class="timeline"><span class="gbar b3" data-phase="2" onclick="selectPhase(2)" style="left:37.5%;width:25%"></span></div>
+
+            <div class="cell row-title" onclick="selectPhase(3)">4. UI и дашборд мониторинга</div>
+            <div class="timeline"><span class="gbar b4" data-phase="3" onclick="selectPhase(3)" style="left:62.5%;width:12.5%"></span></div>
+
+            <div class="cell row-title" onclick="selectPhase(4)">5. Масштабирование и регламент</div>
+            <div class="timeline"><span class="gbar b5" data-phase="4" onclick="selectPhase(4)" style="left:75%;width:25%"></span></div>
+          </div>
+
+          <aside class="detail" id="phaseDetail">
+            <h3>1. Подготовка шаблона КП</h3>
+            <div class="meta"><span class="pill">Неделя 1</span><span class="pill">PM + аналитик + эксперт КП</span></div>
+            <p>Фиксируем структуру карты, обязательные поля, правила расчёта коэффициентов и базовые проверки качества данных.</p>
+            <ul>
+              <li>Выход: единый шаблон карты КП</li>
+              <li>Риск: разные трактовки методики расчёта</li>
+              <li>AI: генерация тестовых сценариев и проверочных правил</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Статус по дочерним предприятиям</h2>
+          <div class="filters">
+            <button class="active" onclick="filterCompanies('all',this)">Все</button>
+            <button onclick="filterCompanies('ok',this)">Принято</button>
+            <button onclick="filterCompanies('check',this)">Проверка</button>
+            <button onclick="filterCompanies('risk',this)">Риски</button>
+          </div>
+        </div>
+        <div class="table-grid">
+          <table>
+            <thead><tr><th>Предприятие</th><th>Прогресс</th><th>Ошибки</th><th>Статус</th><th>Комментарий AI</th></tr></thead>
+            <tbody id="companyRows"></tbody>
+          </table>
+
+          <aside class="company-card" id="companyCard">
+            <h3>НПЗ-1</h3>
+            <div class="metric-line"><span>Прогресс</span><strong>92%</strong></div>
+            <div class="metric-line"><span>Ошибки</span><strong>2</strong></div>
+            <div class="metric-line"><span>Среднее согласование</span><strong>2.1 дн.</strong></div>
+            <div class="metric-line"><span>Рекомендация AI</span><strong>финализировать</strong></div>
+            <p style="font-size:13px;color:#cbd7e9;line-height:1.45">Отклонения некритичны, пояснения заполнены. Можно передавать пакет на финальное подтверждение.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Шаблон отчёта для стейкхолдеров</h2><span>draft by Reporting Agent</span>
+        </div>
+        <div class="report">
+          <h3>Еженедельный статус внедрения AI-assisted процесса</h3>
+          <div class="report-meta">
+            <span class="pill">Статус: контролируемое внедрение</span>
+            <span class="pill">Прогресс: <span id="reportProgress">68%</span></span>
+            <span class="pill">Риск: умеренный</span>
+          </div>
+
+          <div class="report-block">
+            <strong>Краткое резюме</strong>
+            <p>Проект движется в рамках пилотного контура. Основной фокус текущего этапа — не ускорение любой ценой, а аккуратная настройка AI-агентов, чтобы автоматизация не ухудшила качество управленческой отчётности.</p>
+          </div>
+
+          <div class="report-block">
+            <strong>Что уже сделано</strong>
+            <p>Согласована целевая структура карты КП, описаны обязательные поля, подготовлены тестовые сценарии с ошибками, пропусками и отклонениями. Data Validation Agent уже позволяет выявлять часть проблем до ручного согласования.</p>
+          </div>
+
+          <div class="report-block">
+            <strong>Наблюдения по процессу</strong>
+            <p>Наибольшие задержки возникают не на этапе заполнения фактических значений, а на стыке согласования: уточнение методики расчёта, подтверждение спорных значений и подготовка единообразных комментариев по отклонениям.</p>
+          </div>
+
+          <div class="report-block">
+            <strong>Риски и ограничения</strong>
+            <p>AI-агенты дают полезные подсказки, но не должны автоматически утверждать показатели. Для снижения риска предлагается оставить человека владельцем финального решения, а AI использовать как инструмент предварительной проверки и подготовки черновиков.</p>
+          </div>
+
+          <div class="report-block">
+            <strong>Решения, которые нужны от стейкхолдеров</strong>
+            <p>Требуется подтвердить единую методику расчёта для спорных КП, определить ответственных за финальную валидацию комментариев и согласовать перечень предприятий для следующей волны пилота.</p>
+          </div>
+
+          <div class="report-block">
+            <strong>Следующие шаги</strong>
+            <p>Закрыть замечания по текущему пилоту, донастроить агента комментариев, обновить дорожную карту внедрения и подготовить короткое обучение для пользователей дочерних предприятий.</p>
+          </div>
+
+          <div class="ai-note">
+            <strong>AI-summary:</strong> внедрение выглядит целесообразным, но требует осторожного масштабирования. Максимальный эффект ожидается за счёт снижения возвратов на доработку, ускорения первичной проверки и стандартизации пояснений по отклонениям.
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <div class="footer-note">Interactive HTML prototype · AI-assisted project management dashboard</div>
+</main>
+
+<script>
+const scenarios={
+  base:{
+    companies:"3 / 10",
+    cards:"34%",
+    review:"9",
+    errors:"16",
+    progress:"34%",
+    donut:34,
+    bars:[1,2,1,0],
+    spark:"0,104 50,101 100,96 150,90 200,83 250,76 300,69"
+  },
+  fast:{
+    companies:"5 / 10",
+    cards:"49%",
+    review:"12",
+    errors:"24",
+    progress:"49%",
+    donut:49,
+    bars:[2,2,1,0],
+    spark:"0,104 50,97 100,88 150,78 200,68 250,58 300,49"
+  }
+};
+const phases=[
+  {t:"1. Подготовка шаблона КП",w:"Неделя 1",r:"PM + аналитик + эксперт КП",d:"Фиксируем структуру карты, обязательные поля, правила расчёта коэффициентов и базовые проверки качества данных.",out:"единый шаблон карты КП",risk:"разные трактовки методики расчёта",ai:"генерация тестовых сценариев и проверочных правил"},
+  {t:"2. Настройка AI-агентов",w:"Недели 2–3",r:"аналитик + разработчик/no-code + AI-инструменты",d:"Настраиваем агентов проверки данных, анализа отклонений, генерации комментариев, контроля дорожной карты и отчётности.",out:"набор AI-агентов для пилота",risk:"агент может некорректно интерпретировать показатель",ai:"Codex/Claude Code, ChatGPT/Claude, MCP-интеграции"},
+  {t:"3. Пилот на 1 предприятии",w:"Недели 4–5",r:"PM + дочернее предприятие + оценщики",d:"Сравниваем ручной и AI-assisted процесс на одном предприятии, собираем ошибки и обратную связь пользователей.",out:"результаты пилота и список доработок",risk:"неполные исходные данные и задержки подтверждения",ai:"предварительная проверка, поиск выбросов, черновики пояснений"},
+  {t:"4. UI и дашборд мониторинга",w:"Неделя 6",r:"разработчик + PM + аналитик",d:"Собираем интерфейс для контроля статуса, ошибок, прогресса согласования и рисков по предприятиям.",out:"интерактивный дашборд",risk:"сложно уместить все статусы без перегруза интерфейса",ai:"Reporting Agent формирует summary и подсказки для PM"},
+  {t:"5. Масштабирование и регламент",w:"Недели 7–8",r:"PM + головной офис + дочерние предприятия",d:"Подключаем следующие предприятия, фиксируем регламент работы с AI-агентами и обучаем пользователей.",out:"готовность к расширению контура",risk:"сопротивление пользователей и разные практики заполнения",ai:"поддержка обучения, типовые ответы, обновление отчётности"}
+];
+const companies=[
+  {n:"НПЗ-1",p:92,e:2,s:"ok",sl:"принято",c:"Отклонения некритичны, пояснения заполнены.",days:"2.1 дн.",rec:"финализировать",txt:"Можно передавать пакет на финальное подтверждение."},
+  {n:"НПЗ-2",p:74,e:8,s:"check",sl:"на проверке",c:"Есть пропуски по категории «качество».",days:"3.2 дн.",rec:"уточнить поля",txt:"Нужна дозапись фактических значений и комментариев по 4 КП."},
+  {n:"Логистика",p:61,e:11,s:"risk",sl:"риск",c:"Задержка согласования фактических значений.",days:"4.4 дн.",rec:"эскалировать",txt:"AI рекомендует вынести методические вопросы на ближайший синк."},
+  {n:"Производство",p:48,e:6,s:"risk",sl:"риск",c:"Нужно уточнить методику расчёта 3 КП.",days:"5.0 дн.",rec:"решение PM",txt:"Главный блокер — неоднозначная трактовка коэффициентов выполнения."},
+  {n:"Сбыт",p:86,e:3,s:"check",sl:"на проверке",c:"Требуется финальная валидация комментариев.",days:"2.8 дн.",rec:"проверить",txt:"Данные заполнены, но есть риск формальных комментариев по отклонениям."}
+];
+function setScenario(name,btn){
+  const s=scenarios[name];
+  kpiCompanies.innerText=s.companies;kpiCards.innerText=s.cards;kpiReview.innerText=s.review;kpiErrors.innerText=s.errors;
+  reportProgress.innerText=s.progress;donutValue.innerText=s.progress;donut.style.background=`conic-gradient(var(--green) 0 ${s.donut}%, rgba(148,163,184,.22) ${s.donut}% 100%)`;
+  const total=s.bars.reduce((a,b)=>a+b,0)||1;
+  const ids=["barOk","barCheck","barRisk","barBlock"], texts=["barOkText","barCheckText","barRiskText","barBlockText"];
+  s.bars.forEach((v,i)=>{document.getElementById(ids[i]).style.width=(v/total*100)+"%";document.getElementById(texts[i]).innerText=v;});
+  sparkLine.setAttribute("points",s.spark);
+  sparkArea.setAttribute("points","0,112 "+s.spark+" 300,112");
+  document.querySelectorAll('.panel button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+}
+function selectPhase(i){
+  const p=phases[i];
+  document.querySelectorAll('.gbar').forEach(b=>b.classList.remove('selected'));
+  document.querySelector(`.gbar[data-phase="${i}"]`).classList.add('selected');
+  phaseDetail.innerHTML=`<h3>${p.t}</h3><div class="meta"><span class="pill">${p.w}</span><span class="pill">${p.r}</span></div><p>${p.d}</p><ul><li>Выход: ${p.out}</li><li>Риск: ${p.risk}</li><li>AI: ${p.ai}</li></ul>`;
+}
+function renderCompanies(filter='all'){
+  companyRows.innerHTML='';
+  companies.filter(x=>filter==='all'||x.s===filter).forEach((x,idx)=>{
+    const tr=document.createElement('tr');tr.className='company';tr.onclick=()=>selectCompany(x,tr);
+    tr.innerHTML=`<td><strong>${x.n}</strong></td><td><div class="progress-wrap"><div class="progress" style="width:${x.p}%"></div></div></td><td>${x.e}</td><td><span class="status ${x.s==='ok'?'ok':x.s==='check'?'check':'risk'}">${x.sl}</span></td><td>${x.c}</td>`;
+    companyRows.appendChild(tr); if(idx===0 && filter==='all') tr.classList.add('selected');
+  });
+}
+function selectCompany(x,tr){
+  document.querySelectorAll('tr.company').forEach(r=>r.classList.remove('selected'));tr.classList.add('selected');
+  companyCard.innerHTML=`<h3>${x.n}</h3><div class="metric-line"><span>Прогресс</span><strong>${x.p}%</strong></div><div class="metric-line"><span>Ошибки</span><strong>${x.e}</strong></div><div class="metric-line"><span>Среднее согласование</span><strong>${x.days}</strong></div><div class="metric-line"><span>Рекомендация AI</span><strong>${x.rec}</strong></div><p style="font-size:13px;color:#cbd7e9;line-height:1.45">${x.c} ${x.txt}</p>`;
+}
+function filterCompanies(f,btn){
+  document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  renderCompanies(f);
+  const first=companies.find(x=>f==='all'||x.s===f); 
+  if(first){companyCard.innerHTML=`<h3>${first.n}</h3><div class="metric-line"><span>Прогресс</span><strong>${first.p}%</strong></div><div class="metric-line"><span>Ошибки</span><strong>${first.e}</strong></div><div class="metric-line"><span>Среднее согласование</span><strong>${first.days}</strong></div><div class="metric-line"><span>Рекомендация AI</span><strong>${first.rec}</strong></div><p style="font-size:13px;color:#cbd7e9;line-height:1.45">${first.c} ${first.txt}</p>`}
+}
+renderCompanies();
+</script>
+</body>
+</html>
